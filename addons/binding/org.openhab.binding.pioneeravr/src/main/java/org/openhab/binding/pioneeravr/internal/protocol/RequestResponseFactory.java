@@ -14,7 +14,7 @@ import org.openhab.binding.pioneeravr.internal.protocol.ip.IpAvrConnection;
 
 /**
  * Factory that allows to build IpControl commands/responses.
- *
+ * 
  * @author Antoine Besnard
  *
  */
@@ -56,7 +56,7 @@ public final class RequestResponseFactory {
 
     /**
      * Return a ParameterizedCommand of the type given in parameter. The
-     * parameter of the command is set with the given parameter value.
+     * parameter of the command is set with the given paramter value.
      * 
      * @param command
      * @param parameter
