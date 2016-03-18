@@ -51,11 +51,13 @@ public class AudioAuthorityBindingConstants {
     public static final String POWER_CHANNEL_PATTERN = "output(1[0-6]|[1-9])#zonePower([01])?";
     public static final String POWER_COMMAND_REPLACE = "UNITNUM__O$1P$2";
 
-    public static final String VOLUME_DB_CHANNEL_PATTERN = "output(1[0-6]|[1-9])#zoneVolumeDb(-[0-9]{1,2}|0)?";
+    public static final String VOLUME_DB_CHANNEL_PATTERN = "output(1[0-6]|[1-9])#zoneVolumeDb(-[1-8]?[0-9]|0)?";
     public static final String VOLUME_DB_COMMAND_REPLACE = "UNITNUM__O$1V$2";
 
-    public static final String VOLUME_UP_DOWN_CHANNEL_PATTERN = "output(1[0-6]|[1-9])#zoneVolumeDimmer([UD])";
-    public static final String VOLUME_UP_DOWN_COMMAND_REPLACE = "UNITNUM__O$1V$2";
+    // using translated volume levels (db) instead of percent as conversion happens prior to creating MatrixCommand
+    // needs to support actual number and up/down for the dimmer control
+    public static final String VOLUME_DIMMER_CHANNEL_PATTERN = "output(1[0-6]|[1-9])#zoneVolumeDimmer(-[1-8]?[0-9]|0|[UD])?";
+    public static final String VOLUME_DIMMER_COMMAND_REPLACE = "UNITNUM__O$1V$2";
 
     public static final String MUTE_CHANNEL_PATTERN = "output(1[0-6]|[1-9])#zoneMute([012])?";
     public static final String MUTE_COMMAND_REPLACE = "UNITNUM__O$1M$2";
@@ -76,10 +78,13 @@ public class AudioAuthorityBindingConstants {
     public static final String MUTE_STATE_RESPONSE_PATTERN = "U([1-4])O(1[0-6]|[1-9])M([01])";
     public static final String MUTE_STATE_CHANNELUID_REPLACE = "output$2#zoneMute";
 
-    public static final String NAME_STATE_RESPONSE_PATTERN = "U([1-4])O(1[0-6]|[1-9])N\"([a-zA-Z0-9-\\.,/!?\\\\]{0,16}+)\"";
+    public static final String NAME_STATE_RESPONSE_PATTERN = "U([1-4])O(1[0-6]|[1-9])N\"([a-zA-Z0-9-\\.,/!?\\\\ ]{0,16}+)\"";
     public static final String NAME_STATE_CHANNELUID_REPLACE = "output$2#zoneName";
 
     public static final String INPUT_SWITCH_STATE_RESPONSE_PATTERN = "U([1-4])O(1[0-6]|[1-9])I(1[0-9]|[1-9]|2[0-8])";
     public static final String INPUT_SWITCH_STATE_CHANNELUID_REPLACE = "output$2#zoneInputSwitch";
 
+    // channel replace pattern so responses can update multiple channels
+    public static final String CHANNEL_VOLUME_DB_PATTERN_TO_REPLACE = "zoneVolumeDb";
+    public static final String CHANNEL_VOLUME_DIMMER_REPLACEMENT_TEXT = "zoneVolumeDimmer";
 }

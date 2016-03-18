@@ -81,7 +81,7 @@ public abstract class AudioAuthorityHandler extends BaseThingHandler
             } else if (channelUID.getId().matches(AudioAuthorityBindingConstants.POWER_CHANNEL_PATTERN)) {
                 commandSent = connection.sendPowerCommand(command, channelUID);
             } else if (channelUID.getId().matches(AudioAuthorityBindingConstants.VOLUME_DB_CHANNEL_PATTERN)
-                    || channelUID.getId().matches(AudioAuthorityBindingConstants.VOLUME_UP_DOWN_CHANNEL_PATTERN)) {
+                    || channelUID.getId().matches(AudioAuthorityBindingConstants.VOLUME_DIMMER_CHANNEL_PATTERN)) {
                 commandSent = connection.sendVolumeCommand(command, channelUID);
             } else if (channelUID.getId().matches(AudioAuthorityBindingConstants.INPUT_SOURCE_SWITCH_CHANNEL_PATTERN)) {
                 commandSent = connection.sendInputSourceCommand(command, channelUID);
@@ -111,9 +111,9 @@ public abstract class AudioAuthorityHandler extends BaseThingHandler
         logger.debug("Initializing handler for AudioAuthority Matrix @{}", connection.getConnectionName());
         super.initialize();
 
-        // for (int i = 0; i < activeZones;) {
-        // connection.sendZoneQuery(connection.getUnitNumber(), i + 1);
-        // }
+        for (int i = 0; i < activeZones; i++) {
+            connection.sendZoneQuery(connection.getUnitNumber(), i + 1);
+        }
 
         // Start the status checker
         Runnable statusChecker = new Runnable() {
@@ -289,7 +289,9 @@ public abstract class AudioAuthorityHandler extends BaseThingHandler
         updateState(dbChannel,
                 new DecimalType(VolumeConverter.convertFromIpControlVolumeToDb(response.getParameter())));
 
-        updateState(dbChannel,
+        updateState(
+                dbChannel.replaceFirst(AudioAuthorityBindingConstants.CHANNEL_VOLUME_DB_PATTERN_TO_REPLACE,
+                        AudioAuthorityBindingConstants.CHANNEL_VOLUME_DIMMER_REPLACEMENT_TEXT),
                 new PercentType((int) VolumeConverter.convertFromIpControlVolumeToPercent(response.getParameter())));
     }
 

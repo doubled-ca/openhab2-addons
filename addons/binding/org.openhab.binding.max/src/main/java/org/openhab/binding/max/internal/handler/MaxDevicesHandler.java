@@ -120,21 +120,10 @@ public class MaxDevicesHandler extends BaseThingHandler implements DeviceStatusL
      */
     @Override
     public void dispose() {
-        logger.debug("Disposed MAX! device {} {}.", getThing().getUID(), maxDeviceSerial);
-        super.dispose();
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.eclipse.smarthome.core.thing.binding.BaseThingHandler#preDispose()
-     */
-    @Override
-    public void preDispose() {
         logger.debug("Disposing MAX! device {} {}.", getThing().getUID(), maxDeviceSerial);
-        if (refreshingActuals)
+        if (refreshingActuals) {
             refreshActualsRestore();
+        }
         if (refreshActualsJob != null && !refreshActualsJob.isCancelled()) {
             refreshActualsJob.cancel(true);
             refreshActualsJob = null;
@@ -145,7 +134,8 @@ public class MaxDevicesHandler extends BaseThingHandler implements DeviceStatusL
             bridgeHandler.unregisterDeviceStatusListener(this);
             bridgeHandler = null;
         }
-        super.preDispose();
+        logger.debug("Disposed MAX! device {} {}.", getThing().getUID(), maxDeviceSerial);
+        super.dispose();
     }
 
     /*
@@ -219,19 +209,24 @@ public class MaxDevicesHandler extends BaseThingHandler implements DeviceStatusL
     public void onDeviceStateChanged(ThingUID bridge, Device device) {
         if (device.getSerialNumber().equals(maxDeviceSerial)) {
             if (!device.isLinkStatusError()) {
-                if (!refreshingActuals)
+                if (!refreshingActuals) {
                     updateStatus(ThingStatus.ONLINE);
-                else
+                } else {
                     updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE, "Updating Actual Temperature");
-            } else
+                }
+            } else {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR);
-            if (!propertiesSet)
+            }
+            if (!propertiesSet) {
                 setProperties(device);
-            if (!configSet)
+            }
+            if (!configSet) {
                 setDeviceConfiguration(device);
+            }
             if (refreshActualRate >= REFRESH_ACTUAL_MIN_RATE && (device.getType() == DeviceType.HeatingThermostat
-                    || device.getType() == DeviceType.HeatingThermostatPlus))
+                    || device.getType() == DeviceType.HeatingThermostatPlus)) {
                 refreshActualCheck((HeatingThermostat) device);
+            }
             if (device.isUpdated() || forceRefresh) {
                 logger.debug("Updating states of {} {} ({}) id: {}", device.getType(), device.getName(),
                         device.getSerialNumber(), getThing().getUID());
@@ -271,9 +266,10 @@ public class MaxDevicesHandler extends BaseThingHandler implements DeviceStatusL
                 }
                 forceRefresh = false;
                 device.setUpdated(false);
-            } else
+            } else {
                 logger.debug("No changes for {} {} ({}) id: {}", device.getType(), device.getName(),
                         device.getSerialNumber(), getThing().getUID());
+            }
         }
     }
 
@@ -321,9 +317,10 @@ public class MaxDevicesHandler extends BaseThingHandler implements DeviceStatusL
             }
             logger.debug("Actual Refresh in progress for {} {} ({}) id: {}", device.getType(), device.getName(),
                     device.getSerialNumber(), getThing().getUID());
-        } else
+        } else {
             logger.trace("Actual date for {} {} ({}) : {}", device.getType(), device.getName(),
                     device.getSerialNumber(), dateFormat.format(device.getActualTempLastUpdated().getTime()));
+        }
 
     }
 
@@ -424,7 +421,7 @@ public class MaxDevicesHandler extends BaseThingHandler implements DeviceStatusL
      * org.eclipse.smarthome.core.thing.Bridge)
      */
     @Override
-    protected void bridgeHandlerInitialized(ThingHandler thingHandler, Bridge bridge) {
+    public void bridgeHandlerInitialized(ThingHandler thingHandler, Bridge bridge) {
         logger.debug("Bridge {} initialized for device: {}", bridge.getUID().toString(),
                 getThing().getUID().toString());
         if (bridgeHandler != null) {
@@ -446,7 +443,7 @@ public class MaxDevicesHandler extends BaseThingHandler implements DeviceStatusL
      * org.eclipse.smarthome.core.thing.Bridge)
      */
     @Override
-    protected void bridgeHandlerDisposed(ThingHandler thingHandler, Bridge bridge) {
+    public void bridgeHandlerDisposed(ThingHandler thingHandler, Bridge bridge) {
         logger.debug("Bridge {} disposed for device: {}", bridge.getUID().toString(), getThing().getUID().toString());
         bridgeHandler = null;
         forceRefresh = true;

@@ -10,6 +10,10 @@ public final class RequestResponseFactory {
         return new MatrixCommandImpl(channelUID.getId(), parameter);
     }
 
+    public static MatrixCommand getIpControlCommand(String channelUID, String parameter) {
+        return new MatrixCommandImpl(channelUID, parameter);
+    }
+
     public static MatrixCommand getIpControlCommand(ChannelUID channelUID) {
         return getIpControlCommand(channelUID, null);
     }

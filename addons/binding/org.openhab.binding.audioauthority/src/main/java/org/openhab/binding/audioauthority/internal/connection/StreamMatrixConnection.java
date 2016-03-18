@@ -215,34 +215,31 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
     @Override
     public boolean sendVolumeCommand(Command command, ChannelUID channelUID) throws MatrixCommandResponseException {
         boolean commandSent = false;
+        MatrixCommand commandToSend = null;
 
-        // The OnOffType for volume is equal to the Mute command
-        if (command instanceof OnOffType) {
-            commandSent = sendMuteCommand(command, channelUID);
+        if (command == OnOffType.ON) {
+            String ipControlVolume = VolumeConverter.convertFromPercentToIpControlVolume(100d);
+            commandToSend = RequestResponseFactory.getIpControlCommand(channelUID, ipControlVolume);
+        } else if (command == OnOffType.OFF) {
+            String ipControlVolume = VolumeConverter.convertFromPercentToIpControlVolume(0d);
+            commandToSend = RequestResponseFactory.getIpControlCommand(channelUID, ipControlVolume);
+        } else if (command == IncreaseDecreaseType.DECREASE) {
+            commandToSend = RequestResponseFactory.getIpControlCommand(channelUID, VolumeUpDownStateValues.DOWN_VALUE);
+        } else if (command == IncreaseDecreaseType.INCREASE) {
+            commandToSend = RequestResponseFactory.getIpControlCommand(channelUID, VolumeUpDownStateValues.UP_VALUE);
+        } else if (command instanceof PercentType) {
+            String ipControlVolume = VolumeConverter
+                    .convertFromPercentToIpControlVolume(((PercentType) command).doubleValue());
+            commandToSend = RequestResponseFactory.getIpControlCommand(channelUID, ipControlVolume);
+        } else if (command instanceof DecimalType) {
+            String ipControlVolume = VolumeConverter
+                    .convertFromDbToIpControlVolume(((DecimalType) command).doubleValue());
+            commandToSend = RequestResponseFactory.getIpControlCommand(channelUID, ipControlVolume);
         } else {
-            MatrixCommand commandToSend = null;
-
-            if (command == IncreaseDecreaseType.DECREASE) {
-                commandToSend = RequestResponseFactory.getIpControlCommand(channelUID,
-                        VolumeUpDownStateValues.DOWN_VALUE);
-            } else if (command == IncreaseDecreaseType.INCREASE) {
-                commandToSend = RequestResponseFactory.getIpControlCommand(channelUID,
-                        VolumeUpDownStateValues.UP_VALUE);
-            } else if (command instanceof PercentType) {
-                String ipControlVolume = VolumeConverter
-                        .convertFromPercentToIpControlVolume(((PercentType) command).doubleValue());
-                commandToSend = RequestResponseFactory.getIpControlCommand(channelUID, ipControlVolume);
-            } else if (command instanceof DecimalType) {
-                String ipControlVolume = VolumeConverter
-                        .convertFromDbToIpControlVolume(((DecimalType) command).doubleValue());
-                commandToSend = RequestResponseFactory.getIpControlCommand(channelUID, ipControlVolume);
-            } else {
-                throw new MatrixCommandResponseException("Command type not supported.");
-            }
-
-            commandSent = sendCommand(commandToSend);
+            throw new MatrixCommandResponseException("Command type not supported.");
         }
-        return commandSent;
+
+        return sendCommand(commandToSend);
     }
 
     @Override

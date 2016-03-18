@@ -110,7 +110,7 @@
                 <label>Volume</label>
                 <description>Set the volume level (dB)</description>
                 <category>SoundVolume</category>
-                <state min="-80" max="0" step="1" pattern="%.1f dB" />
+                <state min="-80" max="0" step="5" pattern="%2d dB" />
         </channel-type>
 
         <channel-type id="inputSwitchChannel">
@@ -148,7 +148,7 @@
                 <label>Volume</label>
                 <description>Increase/Decrease the volume (%) and mute/un-mute on the zone</description>
                 <category>SoundVolume</category>
-                <state min="0" max="100" pattern="%.1d %%" />
+                <state min="0" max="100" step="5" pattern="%3d %%" />
         </channel-type>
 
         <channel-type id="nameChannel">

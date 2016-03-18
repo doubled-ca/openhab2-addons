@@ -17,6 +17,7 @@
 
   <modules>
     <module>org.openhab.binding.astro</module>
+    <module>org.openhab.binding.audioauthority</module>
     <module>org.openhab.binding.autelis</module>
     <module>org.openhab.binding.avmfritz</module>
     <module>org.openhab.binding.dscalarm</module>
@@ -36,7 +37,6 @@
     <module>org.openhab.binding.squeezebox</module>
     <module>org.openhab.binding.tesla</module>
     <module>org.openhab.binding.vitotronic</module>
-    <module>org.openhab.binding.audioauthority</module>
   </modules>
 
 </project>
