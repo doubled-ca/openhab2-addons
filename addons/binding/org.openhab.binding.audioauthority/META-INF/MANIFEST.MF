@@ -8,6 +8,8 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: .
 Import-Package: 
  org.apache.commons.lang;version="2.6.0",
+ org.openhab.binding.audioauthority,
+ org.openhab.binding.audioauthority.handler,
  org.eclipse.smarthome.config.core,
  org.eclipse.smarthome.core.library.types,
  org.eclipse.smarthome.core.thing,
@@ -15,9 +17,6 @@ Import-Package:
  org.eclipse.smarthome.core.thing.binding.builder,
  org.eclipse.smarthome.core.thing.type,
  org.eclipse.smarthome.core.types,
- org.openhab.binding.audioauthority,
- org.openhab.binding.audioauthority.handler,
- org.openhab.core.library.types,
  org.slf4j
 Service-Component: OSGI-INF/*.xml
 Export-Package: org.openhab.binding.audioauthority,

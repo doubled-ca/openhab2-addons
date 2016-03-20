@@ -41,7 +41,6 @@
     <module>org.openhab.binding.tesla</module>
     <module>org.openhab.binding.vitotronic</module>
     <module>org.openhab.binding.zwave</module>
-    <module>org.openhab.binding.audioauthoritytest</module>
   </modules>
 
 </project>

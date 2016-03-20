@@ -31,7 +31,6 @@ import org.openhab.binding.audioauthority.internal.protocol.RequestResponseFacto
 import org.openhab.binding.audioauthority.internal.protocol.VolumeConverter;
 import org.openhab.binding.audioauthority.protocol.MatrixCommand;
 import org.openhab.binding.audioauthority.protocol.MatrixCommandResponseException;
-import org.openhab.binding.audioauthority.protocol.MatrixCommandResponseException;
 import org.openhab.binding.audioauthority.protocol.states.MuteStateValues;
 import org.openhab.binding.audioauthority.protocol.states.PowerStateValues;
 import org.openhab.binding.audioauthority.protocol.states.VolumeUpDownStateValues;
