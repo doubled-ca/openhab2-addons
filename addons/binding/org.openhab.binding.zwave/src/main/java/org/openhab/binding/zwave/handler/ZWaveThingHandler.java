@@ -11,6 +11,7 @@ package org.openhab.binding.zwave.handler;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.smarthome.config.core.Configuration;
+import org.eclipse.smarthome.config.core.status.ConfigStatusMessage;
 import org.eclipse.smarthome.config.core.validation.ConfigValidationException;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Channel;
@@ -28,7 +30,7 @@ import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
-import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
+import org.eclipse.smarthome.core.thing.binding.ConfigStatusThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
@@ -67,7 +69,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
-public class ZWaveThingHandler extends BaseThingHandler implements ZWaveEventListener {
+public class ZWaveThingHandler extends ConfigStatusThingHandler implements ZWaveEventListener {
 
     public final static Set<ThingTypeUID> SUPPORTED_THING_TYPES = Sets.newHashSet();
 
@@ -721,7 +723,7 @@ public class ZWaveThingHandler extends BaseThingHandler implements ZWaveEventLis
         }
 
         if (cmdChannel.converter == null) {
-            logger.warn("NODE {}: No converter set for {}", nodeId, channelUID);
+            logger.warn("NODE {}: No converter set for command {} {}", nodeId, channelUID, dataType);
             return;
         }
 
@@ -931,7 +933,7 @@ public class ZWaveThingHandler extends BaseThingHandler implements ZWaveEventLis
                 }
 
                 if (channel.converter == null) {
-                    logger.warn("NODE {}: No converter set for {}", nodeId, channel.getUID());
+                    logger.warn("NODE {}: No converter set for state {}", nodeId, channel.getUID());
                     return;
                 }
 
@@ -1010,7 +1012,6 @@ public class ZWaveThingHandler extends BaseThingHandler implements ZWaveEventLis
 
                     // Update property information about this device
                     Map<String, String> properties = editProperties();
-                    properties.put(ZWaveBindingConstants.PROPERTY_NODEID, Integer.toString(node.getNodeId()));
                     properties.put(ZWaveBindingConstants.PROPERTY_CLASS_BASIC,
                             node.getDeviceClass().getBasicDeviceClass().toString());
                     properties.put(ZWaveBindingConstants.PROPERTY_CLASS_GENERIC,
@@ -1182,4 +1183,14 @@ public class ZWaveThingHandler extends BaseThingHandler implements ZWaveEventLis
         }
     }
 
+    @Override
+    public Collection<ConfigStatusMessage> getConfigStatus() {
+        Collection<ConfigStatusMessage> configStatus = new ArrayList<>();
+
+        for (String config : getConfig().getProperties().keySet()) {
+            configStatus.add(ConfigStatusMessage.Builder.error(config, "OK").build());
+        }
+
+        return configStatus;
+    }
 }
