@@ -145,11 +145,21 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
      * @param MatrixCommand
      *            the command to send.
      **/
-    protected boolean sendCommand(MatrixCommand commandToSend) {
+    protected boolean sendMatrixCommand(MatrixCommand commandToSend) {
+
+        String command = commandToSend.getCommand();
+        command = command.replaceFirst("UNITNUM__", "U" + unitNumber);
+
+        return sendCommand(command);
+    }
+
+    /**
+     * @param command
+     */
+    private boolean sendCommand(String command) {
         boolean isSent = false;
         if (connect()) {
-            String command = commandToSend.getCommand();
-            command = command.replaceFirst("UNITNUM__", "U" + unitNumber);
+
             try {
                 if (logger.isTraceEnabled()) {
                     logger.trace("Sending {} bytes: {}", command.length(),
@@ -158,9 +168,18 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
                 outputStream.writeBytes(command);
                 outputStream.flush();
                 isSent = true;
-
             } catch (IOException ioException) {
                 logger.error("Error occured when sending command", ioException);
+
+                // log and send disconnection event to update thing status.
+                logger.warn("The AudioAuthority Matrix @{} is disconnected.", getConnectionName(), ioException);
+                MatrixDisconnectionEvent event = new MatrixDisconnectionEvent(StreamMatrixConnection.this, ioException);
+                for (MatrixDisconnectionListener audioMatrixDisconnectionListener : disconnectionListeners) {
+                    audioMatrixDisconnectionListener.onDisconnection(event);
+                }
+
+                // close connection on error
+                close();
             }
 
             logger.debug("Command sent to Audio Authority Matrix @{}: {}", getConnectionName(), command);
@@ -171,27 +190,10 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
 
     // used to send command without activating from a channel
     protected boolean sendRawCommand(String commandToSend) {
-        boolean isSent = false;
-        if (connect()) {
-            String command = AudioAuthorityBindingConstants.COMMAND_PREFIX + commandToSend
-                    + AudioAuthorityBindingConstants.COMMAND_SUFFIX;
-            try {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("Sending {} bytes: {}", command.length(),
-                            DatatypeConverter.printHexBinary(command.getBytes()));
-                }
-                outputStream.writeBytes(command);
-                outputStream.flush();
-                isSent = true;
+        String command = AudioAuthorityBindingConstants.COMMAND_PREFIX + commandToSend
+                + AudioAuthorityBindingConstants.COMMAND_SUFFIX;
 
-            } catch (IOException ioException) {
-                logger.error("Error occured when sending command", ioException);
-            }
-
-            logger.debug("Raw Command sent to Audio Authority Matrix @{}: {}", getConnectionName(), command);
-        }
-
-        return isSent;
+        return sendCommand(command);
     }
 
     /*
@@ -238,7 +240,7 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
             throw new MatrixCommandResponseException("Command type not supported.");
         }
 
-        return sendCommand(commandToSend);
+        return sendMatrixCommand(commandToSend);
     }
 
     @Override
@@ -253,7 +255,7 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
             throw new MatrixCommandResponseException("Command type not supported.");
         }
 
-        return sendCommand(commandToSend);
+        return sendMatrixCommand(commandToSend);
     }
 
     /*
@@ -275,7 +277,7 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
             throw new MatrixCommandResponseException("Command type not supported for Power Command.");
         }
 
-        return sendCommand(commandToSend);
+        return sendMatrixCommand(commandToSend);
     }
 
     @Override
@@ -289,7 +291,7 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
             throw new MatrixCommandResponseException("Command type not supported for Name Command");
         }
 
-        return sendCommand(commandToSend);
+        return sendMatrixCommand(commandToSend);
     }
 
     @Override
@@ -303,7 +305,7 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
             throw new MatrixCommandResponseException("Command type not supported for Input Switch Command");
         }
 
-        return sendCommand(commandToSend);
+        return sendMatrixCommand(commandToSend);
     }
 
     @Override
@@ -366,10 +368,12 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
 
             } catch (IOException e) {
                 logger.warn("The AudioAuthority Matrix @{} is disconnected.", getConnectionName(), e);
+
                 MatrixDisconnectionEvent event = new MatrixDisconnectionEvent(StreamMatrixConnection.this, e);
                 for (MatrixDisconnectionListener audioMatrixDisconnectionListener : disconnectionListeners) {
                     audioMatrixDisconnectionListener.onDisconnection(event);
                 }
+
             }
 
             // Notify the stopReader method caller that the reader is stopped.
