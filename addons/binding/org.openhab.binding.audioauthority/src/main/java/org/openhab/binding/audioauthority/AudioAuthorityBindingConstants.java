@@ -84,7 +84,20 @@ public class AudioAuthorityBindingConstants {
     public static final String INPUT_SWITCH_STATE_RESPONSE_PATTERN = "U([1-4])O(1[0-6]|[1-9])I(1[0-9]|[1-9]|2[0-8])";
     public static final String INPUT_SWITCH_STATE_CHANNELUID_REPLACE = "output$2#zoneInputSwitch";
 
-    // channel replace pattern so responses can update multiple channels
+    // channel replace pattern so these responses can update multiple channels
     public static final String CHANNEL_VOLUME_DB_PATTERN_TO_REPLACE = "zoneVolumeDb";
     public static final String CHANNEL_VOLUME_DIMMER_REPLACEMENT_TEXT = "zoneVolumeDimmer";
+
+    // Unit global commands
+    public static final String UNIT_GLOBAL_MUTE_CHANNEL_PATTERN = "unitMute([0-2])?";
+    public static final String UNIT_GLOBAL_MUTE_COMMAND_REPLACE = "UNITNUM__XM$1";
+
+    public static final String UNIT_GLOBAL_VOLUME_CHANNEL_PATTERN = "unitVolume(-[1-8]?[0-9]|0|[UD])?";
+    public static final String UNIT_GLOBAL_VOLUME_COMMAND_REPLACE = "UNITNUM__XV$1";
+    //
+    // public static final String UNIT_GLOBAL_VOLUME_DB_CHANNEL_PATTERN = "unitVolumeDb(-[1-8]?[0-9]|0)?";
+    // public static final String UNIT_GLOBAL_VOLUME_DB_COMMAND_REPLACE = "UNITNUM__XV$1";
+    //
+    // public static final String UNIT_GLOBAL_VOLUME_UP_DOWN_CHANNEL_PATTERN = "unitVolumeUpDown([UD])?";
+    // public static final String UNIT_GLOBAL_VOLUME_UP_DOWN_COMMAND_REPLACE = "UNITNUM__XV$1";
 }
