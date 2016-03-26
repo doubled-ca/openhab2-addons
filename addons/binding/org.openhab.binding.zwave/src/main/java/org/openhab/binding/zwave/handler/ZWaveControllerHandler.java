@@ -90,9 +90,22 @@ public abstract class ZWaveControllerHandler extends BaseBridgeHandler implement
         param = getConfig().get(CONFIGURATION_NETWORKKEY);
         if (param instanceof String && param != null) {
             networkKey = (String) param;
-        } else {
-            // TODO: Create random network key
+        }
+
+        if (networkKey.length() == 0) {
+            // Create random network key
             networkKey = "";
+            for (int cnt = 0; cnt < 16; cnt++) {
+                int value = (int) Math.floor((Math.random() * 255));
+                if (cnt != 0) {
+                    networkKey += " ";
+                }
+                networkKey += String.format("%02X", value);
+            }
+            // Persist the value
+            Configuration configuration = editConfiguration();
+            configuration.put(ZWaveBindingConstants.CONFIGURATION_NETWORKKEY, networkKey);
+            updateConfiguration(configuration);
         }
 
         super.initialize();
@@ -195,7 +208,7 @@ public abstract class ZWaveControllerHandler extends BaseBridgeHandler implement
                     controller.requestSoftReset();
                 } else if (cfg[1].equals("hardreset") && "GO".equals(value)) {
                     controller.requestHardReset();
-                } else if (cfg[1].equals("exclude") && "GO".equals(value)) {
+                } else if (cfg[1].equals("exclude")) {// && "GO".equals(value)) {
                     controller.requestRemoveNodesStart();
                 }
 
@@ -397,6 +410,13 @@ public abstract class ZWaveControllerHandler extends BaseBridgeHandler implement
             return;
         }
         controller.requestRemoveFailedNode(nodeId);
+    }
+
+    public void checkNodeFailed(int nodeId) {
+        if (controller == null) {
+            return;
+        }
+        controller.requestIsFailedNode(nodeId);
     }
 
     public void replaceFailedNode(int nodeId) {
