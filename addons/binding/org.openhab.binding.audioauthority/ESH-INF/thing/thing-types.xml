@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="audioauthority"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0"
+        xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
+
+    <!-- Sample Thing Type -->
+    <thing-type id="ipSonaflex">
+        <label>Sonaflex SF-16M</label>
+        <description>AudioAuthority Sonaflex SF-16M Matrix Amplifier</description>
+	<channel-groups>
+                        <channel-group typeId="audioinput" id="input1" />
+                        <channel-group typeId="audioinput" id="input2" />
+                        <channel-group typeId="audioinput" id="input3" />
+                        <channel-group typeId="audioinput" id="input4" />
+                        <channel-group typeId="audioinput" id="input5" />
+                        <channel-group typeId="audioinput" id="input6" />
+                        <channel-group typeId="audioinput" id="input7" />
+                        <channel-group typeId="audioinput" id="input8" />
+                        <channel-group typeId="audioinput" id="input9" />
+                        <channel-group typeId="audioinput" id="input10" />
+                        <channel-group typeId="audioinput" id="input11" />
+                        <channel-group typeId="audioinput" id="input12" />
+                        <channel-group typeId="audioinput" id="input13" />
+                        <channel-group typeId="audioinput" id="input14" />
+                        <channel-group typeId="audioinput" id="input15" />
+                        <channel-group typeId="audioinput" id="input16" /> 
+
+                        <channel-group typeId="audiozone" id="output1" />
+                        <channel-group typeId="audiozone" id="output2" />
+                        <channel-group typeId="audiozone" id="output3" />
+                        <channel-group typeId="audiozone" id="output4" />
+                        <channel-group typeId="audiozone" id="output5" />
+                        <channel-group typeId="audiozone" id="output6" />
+                        <channel-group typeId="audiozone" id="output7" />
+                        <channel-group typeId="audiozone" id="output8" />
+                        <channel-group typeId="audiozone" id="output9" />
+                        <channel-group typeId="audiozone" id="output10" />
+                        <channel-group typeId="audiozone" id="output11" />
+                        <channel-group typeId="audiozone" id="output12" />
+                        <channel-group typeId="audiozone" id="output13" />
+                        <channel-group typeId="audiozone" id="output14" />
+                        <channel-group typeId="audiozone" id="output15" />
+                        <channel-group typeId="audiozone" id="output16" /> 
+                </channel-groups>
+
+		                <config-description>
+                        <parameter name="address" type="text" required="true">
+                                <context>network-address</context>
+                                <label>Address</label>
+                                <description>The address of the AudioAuthority Sonaflex SF-16M to control.</description>
+                        </parameter>
+                        <parameter name="tcpPort" type="decimal" max="65535" min="1">
+                                <default>23</default>
+                                <label>TCP Port</label>
+                                <description>The TCP port number used to connect to the AudioAuthority Sonaflex SF-16M.</description>
+                        </parameter>
+                        <parameter name="unit" type="decimal" min="1" max="4">
+                                <default>1</default>
+                                <label>Unit</label>
+                                <description>For multiple unit setups, the Unit number of the Sonaflex SF-16M this thing will control </description>
+                        </parameter>
+                        <parameter name="activeZones" type="decimal" min="1" max="16">
+                                <default>1</default>
+                                <label>Active Output Zones</label>
+                                <description>The number of audio outputs active for this unit</description>
+                        </parameter>
+                </config-description>
+
+    </thing-type>
+
+
+	        <channel-group-type id="audioinput">
+                <label>Audio Input</label>
+                <description>Audio Input Control and Settings</description>
+                <channels>
+                        <channel typeId="nameChannel" id="inputName" />
+                        <channel typeId="gainChannel" id="inputGain" />
+                        <channel typeId="stereoChannel" id="inputStereo" />
+                </channels>
+        </channel-group-type>
+
+        <channel-group-type id="audiozone">
+                <label>Audio Zone</label>
+                <description>Audio Zone Control and Settings</description>
+                <channels>
+                        <channel typeId="muteChannel" id="zoneMute" />
+                        <channel typeId="nameChannel" id="zoneName" />
+                        <channel typeId="powerChannel" id="zonePower" />
+                        <channel typeId="stereoChannel" id="zoneStereo" />
+                        <channel typeId="inputSwitchChannel" id="zoneInputSwitch" />
+                        <channel typeId="volumeChannelDimmer" id="zoneVolumeDimmer" />
+                        <channel typeId="volumeChannelDb" id="zoneVolumeDb" />
+                </channels>
+        </channel-group-type>
+
+        <channel-type id="muteChannel">
+                <item-type>Switch</item-type>
+                <label>Mute</label>
+                <description>Enable/Disable the mute status for the Input/Output</description>
+        </channel-type>
+
+        <channel-type id="powerChannel">
+                <item-type>Switch</item-type>
+                <label>Power</label>
+                <description>Power On/Off the Input/Output</description>
+        </channel-type>
+	<channel-type id="volumeChannelDb">
+                <item-type>Number</item-type>
+                <label>Volume</label>
+                <description>Set the volume level (dB)</description>
+                <category>SoundVolume</category>
+                <state min="-80" max="0" step="5" pattern="%2d dB" />
+        </channel-type>
+
+        <channel-type id="inputSwitchChannel">
+                <item-type>String</item-type>
+                <label>Select Input</label>
+                <description>Select the Input source for the Audio Zone</description>
+                <state>
+                        <options>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                        </options>
+                </state>
+        </channel-type>
+
+        <channel-type id="volumeChannelDimmer">
+                <item-type>Dimmer</item-type>
+                <label>Volume</label>
+                <description>Increase/Decrease the volume (%) and mute/un-mute on the zone</description>
+                <category>SoundVolume</category>
+                <state min="0" max="100" step="5" pattern="%3d %%" />
+        </channel-type>
+
+        <channel-type id="nameChannel">
+                <item-type>String</item-type>
+                <label>Name</label>
+                <description>Label for the Input/Output</description>
+        </channel-type>
+
+        <channel-type id="gainChannel">
+                <item-type>Dimmer</item-type>
+                <label>Input Gain</label>
+                <description>
+                        Set the level of digital input gain on a stereo pair or mono input channel. This feature is designed to equalize the input volumes of sources that do not have volume control.
+                </description>
+                <state min="-10" max="10" step="1"></state>
+        </channel-type>
+
+        <channel-type id="stereoChannel">
+                <item-type>Switch</item-type>
+                <label>Stereo</label>
+                <description>Configure Channel to be stereo (paired with channel beside it)</description>
+        </channel-type>
+
+</thing:thing-descriptions>
