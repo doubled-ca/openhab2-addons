@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-2016 by the respective copyright holders.
+ * Copyright (c) 2010-2017 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -14,8 +14,6 @@ import org.eclipse.smarthome.core.types.State;
 import org.openhab.io.imperihome.internal.model.param.NumericValueParam;
 import org.openhab.io.imperihome.internal.model.param.ParamType;
 import org.openhab.io.imperihome.internal.processor.ItemProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Combined temperature/hygro sensor device. Can be specified on either a temp or hygro Item, with a link to the other
@@ -25,8 +23,6 @@ import org.slf4j.LoggerFactory;
  * @author Pepijn de Geus - Initial contribution
  */
 public class TempHygroDevice extends AbstractNumericValueDevice {
-
-    private final Logger logger = LoggerFactory.getLogger(TempHygroDevice.class);
 
     private static final String LINK_HYGRO = "hygro";
     private static final String LINK_TEMP = "temp";

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-2016 by the respective copyright holders.
+ * Copyright (c) 2010-2017 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -18,9 +18,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.StringUtils;
+import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.thing.Bridge;
@@ -35,13 +39,11 @@ import org.eclipse.smarthome.core.thing.binding.builder.ChannelBuilder;
 import org.eclipse.smarthome.core.thing.type.ChannelType;
 import org.eclipse.smarthome.core.thing.type.ChannelTypeUID;
 import org.eclipse.smarthome.core.types.Command;
+import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.types.StateDescription;
 import org.eclipse.smarthome.core.types.StateOption;
 import org.openhab.binding.harmonyhub.HarmonyHubBindingConstants;
 import org.openhab.binding.harmonyhub.config.HarmonyHubConfig;
-import org.openhab.binding.harmonyhub.discovery.HarmonyHubDiscovery;
-import org.openhab.binding.harmonyhub.discovery.HarmonyHubDiscoveryListener;
-import org.openhab.binding.harmonyhub.discovery.HarmonyHubDiscoveryResult;
 import org.openhab.binding.harmonyhub.internal.HarmonyHubHandlerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +53,6 @@ import net.whistlingfish.harmony.HarmonyClient;
 import net.whistlingfish.harmony.HarmonyHubListener;
 import net.whistlingfish.harmony.config.Activity;
 import net.whistlingfish.harmony.config.HarmonyConfig;
-import net.whistlingfish.harmony.protocol.LoginToken;
 
 /**
  * The {@link HarmonyHubHandler} is responsible for handling commands for Harmony Hubs, which are
@@ -59,7 +60,7 @@ import net.whistlingfish.harmony.protocol.LoginToken;
  *
  * @author Dan Cunningham - Initial contribution
  */
-public class HarmonyHubHandler extends BaseBridgeHandler {
+public class HarmonyHubHandler extends BaseBridgeHandler implements HarmonyHubListener {
 
     private Logger logger = LoggerFactory.getLogger(HarmonyHubHandler.class);
 
@@ -68,12 +69,11 @@ public class HarmonyHubHandler extends BaseBridgeHandler {
     // one minute should be plenty short, but not overwhelm the hub with requests
     private static final long CONFIG_CACHE_TIME = 60 * 1000;
 
-    // this can be overridden by a configuration option
-    private static final int DISCO_TIME = 30;
-
     private static final int RETRY_TIME = 60;
 
     private static final int HEARTBEAT_INTERVAL = 30;
+
+    private ScheduledExecutorService buttonExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private List<HubStatusListener> listeners = new CopyOnWriteArrayList<HubStatusListener>();
 
@@ -98,7 +98,9 @@ public class HarmonyHubHandler extends BaseBridgeHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if (command instanceof StringType) {
+        if (command instanceof RefreshType) {
+            updateState(client.getCurrentActivity());
+        } else if (command instanceof StringType) {
             try {
                 try {
                     int actId = Integer.parseInt(command.toString());
@@ -122,50 +124,13 @@ public class HarmonyHubHandler extends BaseBridgeHandler {
 
     @Override
     public void initialize() {
-        updateStatus(ThingStatus.INITIALIZING);
-
-        disconnectFromHub();
-
-        final HarmonyHubConfig config = getConfig().as(HarmonyHubConfig.class);
-
-        int discoTime = config.discoveryTimeout > 0 ? config.discoveryTimeout : DISCO_TIME;
-        heartBeatInterval = config.heartBeatInterval > 0 ? config.heartBeatInterval : HEARTBEAT_INTERVAL;
-
-        final HarmonyHubDiscovery disco = new HarmonyHubDiscovery(discoTime);
-        disco.addListener(new HarmonyHubDiscoveryListener() {
-            @Override
-            public void hubDiscoveryFinished() {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                        "No Harmony Hub found with name" + config.name);
-                retryJob = scheduler.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        initialize();
-                    }
-                }, RETRY_TIME, TimeUnit.SECONDS);
-            }
-
-            @Override
-            public void hubDiscovered(HarmonyHubDiscoveryResult result) {
-                logger.debug("Found hub with name {}", result.getFriendlyName());
-                if (result.getFriendlyName().equalsIgnoreCase(config.name)) {
-                    // remove our listener so HubDiscoveryFinished can not be called while we connect
-                    disco.removeListener(this);
-                    disco.stopDiscovery();
-                    getThing().setProperty(HarmonyHubBindingConstants.HUB_PROPERTY_ACCOUNTID, result.getAccountId());
-                    getThing().setProperty(HarmonyHubBindingConstants.HUB_PROPERTY_SESSIONID, result.getSessionID());
-                    getThing().setProperty(HarmonyHubBindingConstants.HUB_PROPERTY_HOST, result.getHost());
-                    getThing().setProperty(HarmonyHubBindingConstants.HUB_PROPERTY_ID, result.getId());
-                    connectToHub();
-                }
-            }
-        });
-        disco.startDiscovery();
+        connect();
     }
 
     @Override
     public void dispose() {
         listeners.clear();
+        buttonExecutor.shutdownNow();
         disconnectFromHub();
         factory.removeChannelTypesForThing(getThing().getUID());
     }
@@ -187,42 +152,59 @@ public class HarmonyHubHandler extends BaseBridgeHandler {
     }
 
     /**
-     * Connects to a Harmony Hub using credentials obtained through network discovery
-     * x
+     * HarmonyHubListener interface
      */
-    private synchronized void connectToHub() {
-        disconnectFromHub();
-        final String host = getThing().getProperties().get(HarmonyHubBindingConstants.HUB_PROPERTY_HOST);
-        final String accountId = getThing().getProperties().get(HarmonyHubBindingConstants.HUB_PROPERTY_ACCOUNTID);
-        final String sessionId = getThing().getProperties().get(HarmonyHubBindingConstants.HUB_PROPERTY_SESSIONID);
+    @Override
+    public void removeFrom(HarmonyClient hc) {
+        // we have been removed from listening
+    }
 
-        if (host == null || accountId == null || sessionId == null) {
-            logger.error("Can not connect to hub with host {}, accountId {} and sessionId {}", host, accountId,
-                    sessionId);
-            return;
+    /**
+     * HarmonyHubListener interface
+     */
+    @Override
+    public void addTo(HarmonyClient hc) {
+        hc.addListener(new ActivityChangeListener() {
+            @Override
+            public void activityStarted(Activity activity) {
+                updateState(activity);
+            }
+        });
+    }
+
+    /**
+     * Starts the connection process
+     */
+    private synchronized void connect() {
+        disconnectFromHub();
+
+        HarmonyHubConfig config = getConfig().as(HarmonyHubConfig.class);
+        heartBeatInterval = config.heartBeatInterval > 0 ? config.heartBeatInterval : HEARTBEAT_INTERVAL;
+
+        String host = config.host;
+
+        // earlier versions required a name and used network discovery to find the hub and retrieve the host,
+        // this section is to not break that and also update older configurations to use the host configuration
+        // option instead of name
+        if (StringUtils.isBlank(host)) {
+            host = getThing().getProperties().get(HarmonyHubBindingConstants.HUB_PROPERTY_HOST);
+            if (StringUtils.isNotBlank(host)) {
+                Configuration genericConfig = getConfig();
+                genericConfig.put("host", host);
+                updateConfiguration(genericConfig);
+            } else {
+                logger.debug("host not configured");
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "host not configured");
+                return;
+            }
         }
 
         client = HarmonyClient.getInstance();
-        client.addListener(new HarmonyHubListener() {
-            @Override
-            public void removeFrom(HarmonyClient hc) {
-                // we have been removed from listening
-            }
-
-            @Override
-            public void addTo(HarmonyClient hc) {
-                hc.addListener(new ActivityChangeListener() {
-                    @Override
-                    public void activityStarted(Activity activity) {
-                        updateState(activity);
-                    }
-                });
-            }
-        });
+        client.addListener(this);
 
         try {
-            logger.debug("Connecting: host {} sessionId {} accountId {}", host, sessionId, accountId);
-            client.connect(host, new LoginToken(accountId, sessionId));
+            logger.debug("Connecting: host {}", host);
+            client.connect(host);
             heartBeatJob = scheduler.scheduleAtFixedRate(new Runnable() {
 
                 @Override
@@ -230,8 +212,8 @@ public class HarmonyHubHandler extends BaseBridgeHandler {
                     try {
                         client.sendPing();
                     } catch (Exception e) {
-                        logger.error("heartbeat failed for HarmonyHub at " + host, e);
-                        setOfflineAndReconnect();
+                        logger.warn("heartbeat failed", e);
+                        setOfflineAndReconnect("Hearbeat failed");
                     }
                 }
             }, heartBeatInterval, heartBeatInterval, TimeUnit.SECONDS);
@@ -239,12 +221,11 @@ public class HarmonyHubHandler extends BaseBridgeHandler {
             buildChannel();
         } catch (Exception e) {
             logger.error("Could not connect to HarmonyHub at " + host, e);
-            setOfflineAndReconnect();
+            setOfflineAndReconnect("Could not connect: " + e.getMessage());
         }
     }
 
     private void disconnectFromHub() {
-
         if (retryJob != null && !retryJob.isDone()) {
             retryJob.cancel(true);
         }
@@ -253,20 +234,22 @@ public class HarmonyHubHandler extends BaseBridgeHandler {
             heartBeatJob.cancel(true);
         }
 
-        if (getClient() != null) {
-            getClient().disconnect();
+        if (client != null) {
+            client.removeListener(this);
+            client.disconnect();
+            client = null;
         }
     }
 
-    private void setOfflineAndReconnect() {
+    private void setOfflineAndReconnect(String error) {
         disconnectFromHub();
         retryJob = scheduler.schedule(new Runnable() {
             @Override
             public void run() {
-                initialize();
+                connect();
             }
         }, RETRY_TIME, TimeUnit.SECONDS);
-        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, error);
     }
 
     private void updateState(Activity activity) {
@@ -336,6 +319,40 @@ public class HarmonyHubHandler extends BaseBridgeHandler {
      */
     public HarmonyClient getClient() {
         return client;
+    }
+
+    /**
+     * Sends a button press to a device
+     *
+     * @param device
+     * @param button
+     */
+    public void pressButton(int device, String button) {
+        buttonExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (client != null) {
+                    client.pressButton(device, button);
+                }
+            }
+        });
+    }
+
+    /**
+     * Sends a button press to a device
+     *
+     * @param device
+     * @param button
+     */
+    public void pressButton(String device, String button) {
+        buttonExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (client != null) {
+                    client.pressButton(device, button);
+                }
+            }
+        });
     }
 
     /**

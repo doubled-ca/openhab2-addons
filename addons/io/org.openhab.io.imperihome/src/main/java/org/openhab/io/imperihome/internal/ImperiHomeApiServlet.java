@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-2016 by the respective copyright holders.
+ * Copyright (c) 2010-2017 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -37,7 +37,6 @@ import org.openhab.io.imperihome.internal.model.param.DeviceParameters;
 import org.openhab.io.imperihome.internal.model.param.ParamType;
 import org.openhab.io.imperihome.internal.processor.DeviceRegistry;
 import org.openhab.io.imperihome.internal.processor.ItemProcessor;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +53,6 @@ public class ImperiHomeApiServlet extends HttpServlet {
 
     private static final long serialVersionUID = -1966364789075448441L;
 
-    private final Logger logger = LoggerFactory.getLogger(ImperiHomeApiServlet.class);
-
     private static final String PATH = "/imperihome/iss";
 
     private static final String APPLICATION_JSON = "application/json";
@@ -69,7 +66,10 @@ public class ImperiHomeApiServlet extends HttpServlet {
     private static final Pattern URL_PATTERN_DEVICE_HISTORY = Pattern
             .compile(PATH + "/devices/(.+?)/(.+?)/histo/(.+?)/(.+?)$", Pattern.CASE_INSENSITIVE);
 
+    private final Logger logger = LoggerFactory.getLogger(ImperiHomeApiServlet.class);
+
     private final Gson gson;
+    private final ImperiHomeConfig imperiHomeConfig;
 
     private HttpService httpService;
     private ItemRegistry itemRegistry;
@@ -89,6 +89,8 @@ public class ImperiHomeApiServlet extends HttpServlet {
      * Default constructor.
      */
     public ImperiHomeApiServlet() {
+        imperiHomeConfig = new ImperiHomeConfig();
+
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(DeviceType.class, new DeviceTypeSerializer());
         gsonBuilder.registerTypeAdapter(ParamType.class, new ParamTypeSerializer());
@@ -102,10 +104,12 @@ public class ImperiHomeApiServlet extends HttpServlet {
      * @param config Service config.
      */
     protected void activate(Map<String, Object> config) {
-        systemHandler = new SystemHandler();
+        modified(config);
+
+        systemHandler = new SystemHandler(imperiHomeConfig);
         deviceRegistry = new DeviceRegistry();
         actionRegistry = new ActionRegistry(eventPublisher);
-        itemProcessor = new ItemProcessor(itemRegistry, deviceRegistry, actionRegistry);
+        itemProcessor = new ItemProcessor(itemRegistry, deviceRegistry, actionRegistry, imperiHomeConfig);
         roomListHandler = new RoomListHandler(deviceRegistry);
         devicesListHandler = new DevicesListHandler(deviceRegistry);
         deviceActionHandler = new DeviceActionHandler(deviceRegistry);
@@ -121,11 +125,18 @@ public class ImperiHomeApiServlet extends HttpServlet {
     }
 
     /**
-     * OSGi deactivation callback.
-     *
-     * @param componentContext Context.
+     * OSGi config modification callback.
+
+     * @param config Service config.
      */
-    protected void deactivate(ComponentContext componentContext) {
+    protected void modified(Map<String, Object> config) {
+        imperiHomeConfig.update(config);
+    }
+
+    /**
+     * OSGi deactivation callback.
+     */
+    protected void deactivate() {
         try {
             httpService.unregister(PATH);
         } catch (IllegalArgumentException ignored) {
