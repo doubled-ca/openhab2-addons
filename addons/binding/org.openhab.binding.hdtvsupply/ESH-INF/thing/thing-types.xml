@@ -5,20 +5,101 @@
 						  xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
 
 	<!-- Sample Thing Type -->
-	<thing-type id="sample">
-		<label>hdtvsupply Binding Thing</label>
+	<thing-type id="HDMI944H100">
+		<label>HDTV Supply HDBaseT 4x4 Matrix Switcher -- model HDMI944H100</label>
 		<description>Sample thing for hdtvsupply Binding</description>
-
-		<channels>
-			<channel id="channel1" typeId="sample-channel"/>
-		</channels>
+        <channel-groups>
+            <channel-group typeId="output" id="1" />
+            <channel-group typeId="output" id="2" />
+            <channel-group typeId="output" id="3" />
+            <channel-group typeId="output" id="4" />
+            <channel-group typeId="input" id="1" />
+            <channel-group typeId="input" id="2" />
+            <channel-group typeId="input" id="3" />
+            <channel-group typeId="input" id="4" />
+        </channel-groups>
+        <config-description>
+                        <parameter name="address" type="text" required="true">
+                                <context>network-address</context>
+                                <label>Address</label>
+                                <description>The address of the HDTV Supply HDMI944H100 to control.</description>
+                        </parameter>
+                        <parameter name="tcpPort" type="decimal" max="65535" min="1">
+                                <default>8000</default>
+                                <label>TCP Port</label>
+                                <description>The TCP port number used to connect to the AHDTV Supply HDMI944H100.</description>
+                        </parameter>
+        </config-description>
+		
 	</thing-type>
 
+    <channel-group-type id="output">
+        <label>HDMI/HDBaseT Output</label>
+        <description>Combined HDMI and HDBaseT output</description>
+        <channels>
+            <channel typeId="nameChannel" id="name" />
+            <channel typeId="inputChannel" id="selectedInput" />
+            <channel typeId="edid" id="preferredEDID" />
+        </channels>
+    </channel-group-type>
+    
+    <channel-group-type id="input">
+        <label>Source Input</label>
+        <description>HDMI Input for Matrix Switcher</description>
+        <channels>
+            <channel typeId="nameChannel" id="inputName" />
+            <channel typeId="edid" id="EDID"></channel>
+        </channels>
+    </channel-group-type>
+    
+    <channel-type id="nameChannel">
+        <item-type>String</item-type>
+        <label>Name</label>
+        <description>Label for the Input/Output Group</description>
+    </channel-type>
+    <channel-type id="inputChannel">
+        <item-type>String</item-type>
+        <label>Select Input</label>
+        <description>Select the Input source for the Output</description>
+        <state>
+                <options>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                </options>
+        </state>
+    </channel-type>
+    <channel-type id="edid">
+        <item-type>Number</item-type>
+        <label>EDID Setting</label>
+        <description>EDID Setting</description>
+        <state>
+            <options>
+                <option value="1">1080p,Stereo Audio 2.0</option>
+                <option value="2">1080p,Dolby/DTS 5.1</option>
+                <option value="3">1080p,HD Audio 7.1</option>
+                <option value="4">1080i,Stereo Audio 2.0</option>
+                <option value="5">1080i,Dolby/DTS 5.1</option>
+                <option value="6">1080i,HD Audio 7.1</option>
+                <option value="7">3D,Stereo Audio 2.0</option>
+                <option value="8">3D,Dolby/DTS 5.1</option>
+                <option value="9">3D,HD Audio 7.1</option>
+                <option value="10">4K2K30,Stereo Audio 2.0</option>
+                <option value="11">4K2K30,Dolby/DTS 5.1</option>
+                <option value="12">4K2K30,HD Audio 7.1</option>
+                <option value="13">4K2K60,Stereo Audio 2.0</option>
+                <option value="14">4K2K60,Dolby/DTS 5.1</option>
+                <option value="15">4K2K60,HD Audio 7.1</option>
+            </options>
+        </state>
+    </channel-type>
+    
 	<!-- Sample Channel Type -->
-	<channel-type id="sample-channel">
-		<item-type>hdtvsupplyItem</item-type>
-		<label>hdtvsupply Binding Channel</label>
-		<description>Sample channel for hdtvsupply Binding</description>
-	</channel-type>
+<!-- 	<channel-type id="sample-channel"> -->
+<!-- 		<item-type>hdtvsupplyItem</item-type> -->
+<!-- 		<label>hdtvsupply Binding Channel</label> -->
+<!-- 		<description>Sample channel for hdtvsupply Binding</description> -->
+<!-- 	</channel-type> -->
 
 </thing:thing-descriptions>

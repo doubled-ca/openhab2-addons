@@ -215,7 +215,7 @@ public abstract class StreamMatrixConnection implements MatrixConnection {
 
     @Override
     public boolean sendVolumeCommand(Command command, ChannelUID channelUID) throws MatrixCommandResponseException {
-        boolean commandSent = false;
+        // boolean commandSent = false;
         MatrixCommand commandToSend = null;
 
         if (command == OnOffType.ON) {

@@ -8,7 +8,7 @@
  */
 package org.openhab.binding.hdtvsupply.internal;
 
-import static org.openhab.binding.hdtvsupply.hdtvsupplyBindingConstants.HDBASE_T_4X4_MATRIX_SWITCHER;
+import static org.openhab.binding.hdtvsupply.HDTVSupplyBindingConstants.HDBASE_T_4X4_MATRIX_SWITCHER;
 
 import java.util.Collections;
 import java.util.Set;
@@ -18,18 +18,18 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
-import org.openhab.binding.hdtvsupply.handler.hdtvsupplyHandler;
+import org.openhab.binding.hdtvsupply.handler.IpHDTVSupplyHandler;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 
 /**
- * The {@link hdtvsupplyHandlerFactory} is responsible for creating things and thing
+ * The {@link HDTVSupplyHandlerFactory} is responsible for creating things and thing
  * handlers.
  *
  * @author Dennis Drapeau - Initial contribution
  */
 @Component(service = ThingHandlerFactory.class, immediate = true, configurationPolicy = ConfigurationPolicy.OPTIONAL, name = "binding.hdtvsupply")
-public class hdtvsupplyHandlerFactory extends BaseThingHandlerFactory {
+public class HDTVSupplyHandlerFactory extends BaseThingHandlerFactory {
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections
             .singleton(HDBASE_T_4X4_MATRIX_SWITCHER);
@@ -44,7 +44,7 @@ public class hdtvsupplyHandlerFactory extends BaseThingHandlerFactory {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (thingTypeUID.equals(HDBASE_T_4X4_MATRIX_SWITCHER)) {
-            return new hdtvsupplyHandler(thing);
+            return new IpHDTVSupplyHandler(thing);
         }
 
         return null;
