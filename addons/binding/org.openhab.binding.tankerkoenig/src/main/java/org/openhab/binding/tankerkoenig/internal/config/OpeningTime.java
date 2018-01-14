@@ -1,12 +1,11 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-
 package org.openhab.binding.tankerkoenig.internal.config;
 
 /**
@@ -47,4 +46,11 @@ public class OpeningTime {
         this.end = end;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" ").append(this.getText()).append(" Open: ").append(this.getStart()).append("  Close: ")
+                .append(this.getEnd());
+        return sb.toString();
+    }
 }

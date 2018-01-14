@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -33,11 +33,11 @@ import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.types.State;
-import org.openhab.binding.homematic.converter.ConverterException;
-import org.openhab.binding.homematic.converter.ConverterFactory;
-import org.openhab.binding.homematic.converter.ConverterTypeException;
-import org.openhab.binding.homematic.converter.TypeConverter;
 import org.openhab.binding.homematic.internal.communicator.HomematicGateway;
+import org.openhab.binding.homematic.internal.converter.ConverterException;
+import org.openhab.binding.homematic.internal.converter.ConverterFactory;
+import org.openhab.binding.homematic.internal.converter.ConverterTypeException;
+import org.openhab.binding.homematic.internal.converter.TypeConverter;
 import org.openhab.binding.homematic.internal.misc.HomematicClientException;
 import org.openhab.binding.homematic.internal.model.HmChannel;
 import org.openhab.binding.homematic.internal.model.HmDatapoint;
@@ -45,9 +45,9 @@ import org.openhab.binding.homematic.internal.model.HmDatapointConfig;
 import org.openhab.binding.homematic.internal.model.HmDatapointInfo;
 import org.openhab.binding.homematic.internal.model.HmDevice;
 import org.openhab.binding.homematic.internal.model.HmParamsetType;
-import org.openhab.binding.homematic.type.HomematicTypeGeneratorImpl;
-import org.openhab.binding.homematic.type.MetadataUtils;
-import org.openhab.binding.homematic.type.UidUtils;
+import org.openhab.binding.homematic.internal.type.HomematicTypeGeneratorImpl;
+import org.openhab.binding.homematic.internal.type.MetadataUtils;
+import org.openhab.binding.homematic.internal.type.UidUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,9 +63,6 @@ public class HomematicThingHandler extends BaseThingHandler {
         super(thing);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void initialize() {
         scheduler.execute(new Runnable() {
@@ -126,9 +123,6 @@ public class HomematicThingHandler extends BaseThingHandler {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void channelLinked(ChannelUID channelUID) {
         handleRefresh(channelUID);
@@ -148,9 +142,6 @@ public class HomematicThingHandler extends BaseThingHandler {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         logger.debug("Received command '{}' for channel '{}'", command, channelUID);
@@ -250,12 +241,18 @@ public class HomematicThingHandler extends BaseThingHandler {
     private void updateChannelState(final HmDatapoint dp, Channel channel)
             throws IOException, BridgeHandlerNotAvailableException, ConverterException {
 
-        if (isLinked(channel)) {
+        if (dp.isTrigger()) {
+            triggerChannel(channel.getUID(), ObjectUtils.toString(dp.getValue()));
+        } else if (isLinked(channel)) {
             loadHomematicChannelValues(dp.getChannel());
 
             TypeConverter<?> converter = ConverterFactory.createConverter(channel.getAcceptedItemType());
             State state = converter.convertFromBinding(dp);
-            updateState(channel.getUID(), state);
+            if (state != null) {
+                updateState(channel.getUID(), state);
+            } else {
+                logger.debug("Failed to get converted state from datapoint '{}'", dp.getName());
+            }
         }
     }
 
@@ -349,9 +346,6 @@ public class HomematicThingHandler extends BaseThingHandler {
         return ((HomematicBridgeHandler) bridge.getHandler()).getGateway();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void handleConfigurationUpdate(Map<String, Object> configurationParameters)
             throws ConfigValidationException {
