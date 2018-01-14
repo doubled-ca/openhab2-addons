@@ -10,6 +10,7 @@ package org.openhab.binding.audioauthority.handler;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.PercentType;
@@ -54,7 +55,7 @@ public abstract class AudioAuthorityHandler extends BaseThingHandler
 
     protected abstract MatrixConnection createConnection();
 
-    public AudioAuthorityHandler(Thing thing) {
+    public AudioAuthorityHandler(@NonNull Thing thing) {
         super(thing);
         this.connection = createConnection();
         this.activeZones = ((Number) this.getConfig().get(AudioAuthorityBindingConstants.ACTIVE_ZONES)).intValue();

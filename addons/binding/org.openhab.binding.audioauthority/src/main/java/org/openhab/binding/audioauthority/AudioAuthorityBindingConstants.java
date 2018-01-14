@@ -30,8 +30,8 @@ public class AudioAuthorityBindingConstants {
     public final static String HOST_PARAMETER = "address";
     public final static String TCP_PORT_PARAMETER = "tcpPort";
     public final static String SERIAL_PORT_PARAMETER = "serialPort";
-    public static final Object UNIT_NUMBER_PARAMETER = "unit";
-    public static final Object ACTIVE_ZONES = "activeZones";
+    public static final String UNIT_NUMBER_PARAMETER = "unit";
+    public static final String ACTIVE_ZONES = "activeZones";
 
     public final static String IP_PROTOCOL_NAME = "IP";
     public final static String SERIAL_PROTOCOL_NAME = "serial";
