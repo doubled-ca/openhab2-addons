@@ -11,17 +11,20 @@ The Kodi binding is the successor to the openHAB 1.x xbmc binding.
 ## Preparation
 
 In order to allow control of Kodi by this binding, you need to enable the Kodi application remote control feature.
-Please enable "Allow remote control form applications" in the Kodi Setting menu under:
+Please enable "Allow remote control from applications on this/other systems" in the Kodi settings menu under:
 
-* Settings ➔ Services ➔ Control ➔ Allow remote control from applications on this/other systems
+*   Settings ➔ Services ➔ Control ➔ Allow remote control from applications on this/other systems
+
+To make use of the auto-discovery feature, you additionally need to enable "Allow control of Kodi via UPnP" in the Kodi settings menu.
+
+*   Settings ➔ Services ➔ UPnP / DLNA ➔ Allow remote control via UPnP
 
 ## Supported Things
 
 This binding provides only one thing type: The Kodi media center.
 Create one Kodi thing per Kodi instance available in your home automation system.
 
-All Kodi devices are registered as an audio sink in the ESH/openHAB 2 framework.
-
+All Kodi devices are registered as an audio sink in the ESH/openHAB2 framework.
 
 ## Discovery
 
@@ -37,20 +40,20 @@ org.openhab.kodi:enableAutoDiscovery=false
 
 The following configuration options are available for the Kodi binding:
 
-| Parameter | Name | Description | Required |
-|-----------|------|-------------|----------|
-| `callbackUrl` | Callback URL | URL to use for playing notification sounds, e.g. `http://192.168.0.2:8080` | no |
-
+| Parameter     | Name         | Description                                                                | Required |
+|---------------|--------------|----------------------------------------------------------------------------|----------|
+| `callbackUrl` | Callback URL | URL to use for playing notification sounds, e.g. `http://192.168.0.2:8080` | no       |
 
 ### Thing Configuration
 
-The Kodi thing requires the IP address of the device hosting your Kodi media center instance and the TCP port to access it on (default: `9090`).
-These parameters will be found by the auto-discovery feature.
+The Kodi thing requires the IP address of the device hosting your Kodi media center instance, the TCP port to access it (default: `9090`) and the HTTP port to build URLs to the Kodi webinterface for downloading thumbnail and fanart images (default: `8080`).
+You optionally can define a `httpUser` and a `httpPassword` parameter if the access to your Kodi webinterface is protected.
+The IP address will be found by the auto-discovery feature.
 
 A manual setup through a `things/kodi.things` file could look like this:
 
 ```
-kodi:kodi:myKodi [ipAddress="192.168.1.100", port="9090"]
+Thing kodi:kodi:myKodi "Kodi" @ "Living Room" [ipAddress="192.168.1.100", port=9090, httpPort=8080]
 ```
 
 ## Channels
@@ -76,17 +79,22 @@ The Kodi thing supports the following channels:
 | inputtext        | String    | This channel emulates a keyboard input                                                                                                                                                       |
 | systemcommand    | String    | This channel allows to send commands to `shutdown`, `suspend`, `hibernate`, `reboot` kodi                                                                                                    |
 | mediatype        | String    | The media type of the current file. Valid return values are: `unknown`, `channel`, `episode`, `movie`, `musicvideo`, `picture`, `radio`, `song`, `video`                                     |
+| thumbnail        | Image     | The URL to the thumbnail of the current file                                                                                                                                                 |
+| fanart           | Image     | The URL to the fanart of the current file                                                                                                                                                    |                                                                          |
 
 ### Channel Configuration
 
-**group** The PVR channels can be put into user-defined PVR channel groups. There are two default PVR channel groups. One for PVR TV channels and one for PVR radio channels. The default labels are "All channels" (in german systems "Alle Kanäle"). You have to adjust this configuration to use the `pvr-open-tv` and `pvr-open-radio` channels properly. You can optionally configure an user-defined PVR channel group.
+**group** The PVR channels can be put into user-defined PVR channel groups.
+There are two default PVR channel groups. One for PVR TV channels and one for PVR radio channels. The default labels are "All channels" (in german systems "Alle Kanäle").
+You have to adjust this configuration to use the `pvr-open-tv` and `pvr-open-radio` channels properly.
+You can optionally configure an user-defined PVR channel group.
 
 A manual setup through a `things/kodi.things` file could look like this:
 
 ```
-kodi:kodi:myKodi [ipAddress="192.168.1.100", port="9090"] {
+Thing kodi:kodi:myKodi "Kodi" @ "Living Room" [ipAddress="192.168.1.100", port=9090] {
     Channels:
-        Type pvropentv : pvr-open-tv [
+        Type pvr-open-tv : pvr-open-tv [
             group="All channels"
         ]
 }
@@ -114,6 +122,8 @@ String myKodi_input         "Input"                 { channel="kodi:kodi:myKodi:
 String myKodi_inputtext     "Inputtext"             { channel="kodi:kodi:myKodi:inputtext" }
 String myKodi_systemcommand "Systemcommand"         { channel="kodi:kodi:myKodi:systemcommand" }
 String myKodi_mediatype     "Mediatype [%s]"        { channel="kodi:kodi:myKodi:mediatype" }
+Image  myKodi_thumbnail                             { channel="kodi:kodi:myKodi:thumbnail" }
+Image  myKodi_fanart                                { channel="kodi:kodi:myKodi:fanart" }
 ```
 
 ## Sitemap Configuration
@@ -139,6 +149,8 @@ sitemap demo label="myKodi"
         Selection item=myKodi_input mappings=[Up='Up', Down='Down', Left='Left', Right='Right', Select='Select', Back='Back', Home='Home', ContextMenu='ContextMenu', Info='Info']
         Selection item=myKodi_systemcommand mappings=[Shutdown='Herunterfahren', Suspend='Bereitschaft', Reboot='Neustart']
         Text      item=myKodi_mediatype
+        Image     item=myKodi_thumbnail
+        Image     item=myKodi_fanart
     }
 }
 ```

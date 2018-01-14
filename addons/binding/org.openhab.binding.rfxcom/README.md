@@ -210,6 +210,7 @@ Switch Switch {channel="rfxcom:lighting2:usb0:100001_1:command"}
 
 This binding currently supports the following things / message types:
 
+ * [bbqtemperature - RFXCOM BBQ Temperature Sensor](#bbqtemperature---rfxcom-bbq-temperature-sensor)
  * [blinds1 - RFXCOM Blinds1 Actuator](#blinds1---rfxcom-blinds1-actuator)
  * [chime - RFXCOM Chime](#chime---rfxcom-chime)
  * [currentenergy - RFXCOM CurrentEnergy Actuator](#currentenergy---rfxcom-currentenergy-actuator)
@@ -233,6 +234,26 @@ This binding currently supports the following things / message types:
  * [undecoded - RFXCOM Undecoded RF Messages](#undecoded---rfxcom-undecoded-rf-messages)
  * [uv - RFXCOM UV/Temperature Sensor](#uv---rfxcom-uvtemperature-sensor)
  * [wind - RFXCOM Wind Sensor](#wind---rfxcom-wind-sensor)
+
+### bbqtemperature - RFXCOM BBQ Temperature Sensor
+
+A BBQ Temperature device.
+
+#### Channels
+
+| Name            | Channel Type                        | Item Type | Remarks  |
+|-----------------|-------------------------------------|-----------|----------|
+| foodTemperature | [temperature](#channels)            | Number    |          |
+| bbqTemperature  | [temperature](#channels)            | Number    |          |
+| signalLevel     | [system.signal-strength](#channels) | Number    |          |
+| batteryLevel    | [system.battery-level](#channels)   | Number    |          |
+| lowBattery      | [system.low-battery](#channels)     | Switch    |          |
+
+#### Configuration Options
+
+ * deviceId - Device Id
+    * Sensor Id. Example 56923
+
 
 ### blinds1 - RFXCOM Blinds1 Actuator
 
@@ -294,6 +315,31 @@ A Chime device.
         * SELECTPLUS3 - SelectPlus3
         * ENVIVO - Envivo
 
+
+### current - RFXCOM Current Sensor
+
+A Current sensing device.
+
+#### Channels
+
+| Name         | Channel Type                        | Item Type | Remarks          |
+|--------------|-------------------------------------|-----------|------------------|
+| channel1Amps | [instantamp](#channels)             | Number    |                  |
+| channel2Amps | [instantamp](#channels)             | Number    |                  |
+| channel3Amps | [instantamp](#channels)             | Number    |                  |
+| signalLevel  | [system.signal-strength](#channels) | Number    |                  |
+| batteryLevel | [system.battery-level](#channels)   | Number    |                  |
+| lowBattery   | [system.low-battery](#channels)     | Switch    |                  |
+
+#### Configuration Options
+
+ * deviceId - Device Id
+    * Sensor Id. Example 5693
+
+ * subType - Sub Type
+    * Specifies device sub type.
+
+        * ELEC1 - OWL - CM113
 
 ### currentenergy - RFXCOM CurrentEnergy Actuator
 
