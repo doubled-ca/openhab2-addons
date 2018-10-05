@@ -8,36 +8,35 @@
  */
 package org.openhab.binding.yamahareceiver.internal;
 
-import java.util.ArrayList;
+import static java.util.stream.Collectors.toList;
+import static org.openhab.binding.yamahareceiver.internal.YamahaReceiverBindingConstants.*;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.IntStream;
 
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.type.ChannelGroupType;
 import org.eclipse.smarthome.core.thing.type.ChannelGroupTypeUID;
 import org.eclipse.smarthome.core.thing.type.ChannelType;
+import org.eclipse.smarthome.core.thing.type.ChannelTypeBuilder;
 import org.eclipse.smarthome.core.thing.type.ChannelTypeProvider;
 import org.eclipse.smarthome.core.thing.type.ChannelTypeUID;
-import org.eclipse.smarthome.core.thing.type.TypeResolver;
 import org.eclipse.smarthome.core.types.StateDescription;
 import org.eclipse.smarthome.core.types.StateOption;
-import org.openhab.binding.yamahareceiver.YamahaReceiverBindingConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openhab.binding.yamahareceiver.internal.state.PresetInfoState;
 
 /**
  * Provide a custom channel type for the preset channel
  *
- * @author David Graeff
+ * @author David Graeff - Initial controbution
+ * @author Tomasz Maruszak - RX-V3900 compatibility improvements
  */
 public class ChannelsTypeProviderPreset implements ChannelTypeProvider {
-    private Logger logger = LoggerFactory.getLogger(ChannelsTypeProviderPreset.class);
-
-    private ChannelType templateType;
     private ChannelType channelType;
-    private ChannelTypeUID channelTypeUID;
+    private final ChannelTypeUID channelTypeUID;
 
     @Override
     public Collection<ChannelType> getChannelTypes(Locale locale) {
@@ -71,37 +70,33 @@ public class ChannelsTypeProviderPreset implements ChannelTypeProvider {
         /**
          * We generate a thing specific channelTypeUID, because presets absolutely depends on the thing.
          */
-        channelTypeUID = new ChannelTypeUID(YamahaReceiverBindingConstants.BINDING_ID,
-                YamahaReceiverBindingConstants.CHANNEL_PLAYBACK_PRESET_TYPE_NAMED + thing.getId());
+        channelTypeUID = new ChannelTypeUID(BINDING_ID, CHANNEL_PLAYBACK_PRESET_TYPE_NAMED + thing.getId());
 
-        // Use the INPUT channel type as a template to create a new channel type AVAILABLE_INPUTS.
-        final ChannelTypeUID channelTypePresetUID = new ChannelTypeUID(YamahaReceiverBindingConstants.BINDING_ID,
-                YamahaReceiverBindingConstants.CHANNEL_PLAYBACK_PRESET_TYPE_DEFAULT);
-        templateType = TypeResolver.resolve(channelTypePresetUID);
-        if (templateType == null) {
-            logger.warn("Couldn't find: {}", channelTypePresetUID);
-        } else {
-            channelType = new ChannelType(channelTypeUID, false, "Number", templateType.getKind(),
-                    templateType.getLabel(), templateType.getDescription(), templateType.getCategory(),
-                    templateType.getTags(), templateType.getState(), templateType.getEvent(),
-                    templateType.getConfigDescriptionURI());
-        }
+        StateDescription state = getDefaultStateDescription();
+        createChannelType(state);
     }
 
-    public void changePresetNames(String presetNames[]) {
-        if (templateType == null) {
-            logger.warn("{} not initialized correctly", getClass().getName());
-            return;
-        }
+    private StateDescription getDefaultStateDescription() {
+        List<StateOption> options = IntStream.rangeClosed(1, 40)
+                .mapToObj(i -> new StateOption(Integer.toString(i), "Item_" + i))
+                .collect(toList());
 
-        List<StateOption> options = new ArrayList<>();
-        for (int i = 1; i <= presetNames.length; ++i) {
-            options.add(new StateOption(String.valueOf(i), presetNames[i - 1]));
-        }
         StateDescription state = new StateDescription(null, null, null, "%s", false, options);
-        channelType = new ChannelType(channelTypeUID, false, "Number", templateType.getKind(), templateType.getLabel(),
-                templateType.getDescription(), templateType.getCategory(), templateType.getTags(), state,
-                templateType.getEvent(), templateType.getConfigDescriptionURI());
+        return state;
+    }
+
+    public void changePresetNames(List<PresetInfoState.Preset> presets) {
+        List<StateOption> options = presets.stream()
+                .map(preset -> new StateOption(String.valueOf(preset.getValue()), preset.getName()))
+                .collect(toList());
+
+        StateDescription state = new StateDescription(null, null, null, "%s", false, options);
+        createChannelType(state);
+    }
+
+    private void createChannelType(StateDescription state) {
+        channelType = ChannelTypeBuilder.state(channelTypeUID, "Preset", "Number")
+                .withDescription("Select a saved channel by its preset number").withStateDescription(state).build();
     }
 
 }
